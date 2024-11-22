@@ -1,0 +1,50 @@
+version: '3'
+services:
+    dating-api-php:
+        container_name: dating-api-php
+        hostname: dating-api-php
+        restart: unless-stopped
+        build:
+            context: ./
+        volumes:
+            - .:/var/www/html
+        ports:
+            - "127.0.0.1:9000:9000"
+        networks:
+            - dating-api-network
+        depends_on:
+            - dating-api-postgres
+
+    dating-api-nginx:
+        image: nginx:1.23.1-alpine
+        container_name: dating-api-nginx
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "80:80"
+        volumes:
+            - ./:/var/www/html
+            - ./nginx/:/etc/nginx/conf.d/
+        networks:
+            - dating-api-network
+
+    dating-api-postgres:
+        image: postgres:14.4-alpine
+        container_name: dating-api-postgres
+        restart: unless-stopped
+        ports:
+            - "5438:5432"
+        networks:
+            - dating-api-network
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: secret
+            POSTGRES_DB: dating
+            POSTGRES_HOST_AUTH_METHOD: "trust"
+        hostname: dating-api-postgres
+        volumes:
+            - /home/cloud-user/pgdata:/var/lib/postgresql/data
+
+networks:
+    dating-api-network:
+        driver: bridge
